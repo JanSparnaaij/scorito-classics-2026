@@ -7,6 +7,5 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  external: ['playwright', 'chromium-bidi'],
-  noExternal: ['db', 'scraping', 'core'],
+  external: ['playwright', 'chromium-bidi', 'db', 'scraping', 'core', 'dotenv'],
 });
