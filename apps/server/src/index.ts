@@ -47,6 +47,8 @@ const start = async () => {
       return {
         status: 'ok',
         message: 'Scorito Classics 2026 API',
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
         endpoints: {
           races: '/api/races',
           syncRaces: 'POST /api/races/sync',
@@ -55,8 +57,19 @@ const start = async () => {
       };
     });
 
+    // Simple test endpoint without database
+    server.get('/health', async (request, reply) => {
+      return { status: 'healthy', timestamp: new Date().toISOString() };
+    });
+
     // Register API routes
-    await server.register(routes, { prefix: '/api' });
+    try {
+      await server.register(routes, { prefix: '/api' });
+      console.log('✅ API routes registered successfully');
+    } catch (err) {
+      console.error('❌ Failed to register API routes:', err);
+      // Continue without API routes for debugging
+    }
 
     const port = parseInt(process.env.PORT || '3000', 10);
     await server.listen({ port, host: '0.0.0.0' });
