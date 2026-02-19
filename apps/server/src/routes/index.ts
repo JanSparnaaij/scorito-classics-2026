@@ -9,7 +9,7 @@ export default async function (fastify: FastifyInstance) {
   
   // Seed races from YAML config
   fastify.post('/races/seed', async (request, reply) => {
-    const racesFile = path.join(__dirname, '../../../config/races.classics-2026.yaml');
+    const racesFile = path.join(__dirname, '../../../../config/races.classics-2026.yaml');
     const races: any[] = yaml.load(fs.readFileSync(racesFile, 'utf8')) as any[];
 
     for (const race of races) {
