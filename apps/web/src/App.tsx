@@ -1,24 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Race } from 'core';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 function App() {
   const [races, setRaces] = useState<Race[]>([]);
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [startlist, setStartlist] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/races')
+    fetch(`${API_URL}/api/races`)
       .then(res => res.json())
       .then(data => setRaces(data));
   }, []);
 
   const handleSync = async () => {
-    await fetch('http://localhost:3000/api/races/sync', { method: 'POST' });
+    await fetch(`${API_URL}/api/races/sync`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     alert('Sync complete!');
   };
 
   const fetchStartlist = (slug: string) => {
-    fetch(`http://localhost:3000/api/races/${slug}/startlist`)
+    fetch(`${API_URL}/api/races/${slug}/startlist`)
       .then(res => res.json())
       .then(data => {
         setStartlist(data);

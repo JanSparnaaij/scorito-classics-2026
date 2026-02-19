@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "buildCommand": "cd apps/web && pnpm install && pnpm build",
+  "outputDirectory": "apps/web/dist",
+  "installCommand": "npm install -g pnpm && pnpm install",
+  "framework": null
+}
