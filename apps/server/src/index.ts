@@ -2,8 +2,13 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { execSync } from 'child_process';
 
-// Load .env from the monorepo root
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// Load .env only in development (not in production where Railway provides env vars)
+if (process.env.NODE_ENV !== 'production' && !process.env.RAILWAY_ENVIRONMENT) {
+  dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+  console.log('Loaded .env file for local development');
+} else {
+  console.log('Using Railway environment variables');
+}
 
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
