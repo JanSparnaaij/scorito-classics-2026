@@ -1,5 +1,5 @@
-# Use a Node.js base image
-FROM node:18-alpine
+# Use Node 20 which has the File API required by undici
+FROM node:20-alpine
 
 # Set the working directory
 WORKDIR /app
