@@ -37,6 +37,19 @@ export default async function (fastify: FastifyInstance) {
     return races;
   });
 
+  fastify.get('/riders', async (request, reply) => {
+    const riders = await prisma.rider.findMany({
+      take: 100,
+      orderBy: { name: 'asc' }
+    });
+    return riders;
+  });
+
+  fastify.get('/riders/count', async (request, reply) => {
+    const count = await prisma.rider.count();
+    return { count };
+  });
+
   fastify.post('/races/sync', async (request, reply) => {
     const scraper = new PcsScraper(process.env.USER_AGENT || 'scorito-classics-2026');
     const races = await prisma.race.findMany();
