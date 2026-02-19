@@ -41,10 +41,6 @@ importers:
       '@fastify/cors':
         specifier: ^9.0.1
         version: 9.0.1
-      fastify:
-        specifier: ^4.26.1
-        version: 4.29.1
-    devDependencies:
       core:
         specifier: workspace:*
         version: link:../../packages/core
@@ -54,9 +50,13 @@ importers:
       dotenv:
         specifier: ^17.3.1
         version: 17.3.1
+      fastify:
+        specifier: ^4.26.1
+        version: 4.29.1
       scraping:
         specifier: workspace:*
         version: link:../../packages/scraping
+    devDependencies:
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@types/node@20.19.33)(typescript@5.9.3)
@@ -1789,7 +1789,6 @@ packages:
   /dotenv@17.3.1:
     resolution: {integrity: sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==}
     engines: {node: '>=12'}
-    dev: true
 
   /dynamic-dedupe@0.3.0:
     resolution: {integrity: sha512-ssuANeD+z97meYOqd50e04Ze5qp4bPqo8cCkI4TRjZkzAUgIDTrXV1R8QCdINpiI+hw14+rYazvTRdQrz0/rFQ==}

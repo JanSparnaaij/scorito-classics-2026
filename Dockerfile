@@ -7,9 +7,14 @@ WORKDIR /app
 # Install pnpm
 RUN npm install -g pnpm
 
-# Copy pnpm lockfile and package.json files
+# Copy workspace config files
+COPY pnpm-workspace.yaml ./
 COPY pnpm-lock.yaml ./
 COPY package.json ./
+COPY turbo.json ./
+COPY tsconfig.json ./
+
+# Copy all package.json files
 COPY apps/server/package.json ./apps/server/
 COPY apps/web/package.json ./apps/web/
 COPY packages/core/package.json ./packages/core/
