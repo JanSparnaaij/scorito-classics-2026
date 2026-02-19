@@ -40,8 +40,12 @@ WORKDIR /app
 # Build the application
 RUN pnpm build
 
+# Copy and make startup script executable
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Start script that runs migrations and starts the server
-CMD ["sh", "-c", "cd /app/packages/db && pnpm prisma migrate deploy && cd /app && pnpm --filter server exec tsx src/index.ts"]
+# Run the startup script
+CMD ["/app/start.sh"]
