@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Race } from 'core';
+import { API_URL } from '../config';
 
 interface StartlistEntry {
   id: string;
@@ -25,7 +26,7 @@ function RaceStartlist() {
     if (!slug) return;
 
     // Fetch race details
-    fetch('http://localhost:3000/api/races')
+    fetch(`${API_URL}/api/races`)
       .then(res => res.json())
       .then(data => {
         const foundRace = data.find((r: Race) => r.slug === slug);
@@ -33,7 +34,7 @@ function RaceStartlist() {
       });
 
     // Fetch startlist
-    fetch(`http://localhost:3000/api/races/${slug}/startlist`)
+    fetch(`${API_URL}/api/races/${slug}/startlist`)
       .then(res => res.json())
       .then(data => {
         setStartlist(data.sort((a: StartlistEntry, b: StartlistEntry) => {

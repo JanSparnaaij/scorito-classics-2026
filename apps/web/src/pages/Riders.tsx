@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Race } from 'core';
+import { API_URL } from '../config';
 
 interface Rider {
   id: string;
@@ -16,14 +17,14 @@ function Riders() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/races')
+    fetch(`${API_URL}/api/races`)
       .then(res => res.json())
       .then(async (allRaces: Race[]) => {
         const riderMap = new Map<string, Rider>();
 
         for (const race of allRaces) {
           const startlist = await fetch(
-            `http://localhost:3000/api/races/${race.slug}/startlist`
+            `${API_URL}/api/races/${race.slug}/startlist`
           ).then(res => res.json());
 
           startlist.forEach((entry: any) => {

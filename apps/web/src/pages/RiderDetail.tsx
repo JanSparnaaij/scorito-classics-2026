@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Race } from 'core';
+import { API_URL } from '../config';
 
 interface RiderInfo {
   id: string;
@@ -29,14 +30,14 @@ function RiderDetail() {
     if (!riderId) return;
 
     // Fetch all races and find ones with this rider
-    fetch('http://localhost:3000/api/races')
+    fetch(`${API_URL}/api/races`)
       .then(res => res.json())
       .then(async (allRaces: Race[]) => {
         const riderRaces: RaceWithRider[] = [];
 
         for (const race of allRaces) {
           const startlist = await fetch(
-            `http://localhost:3000/api/races/${race.slug}/startlist`
+            `${API_URL}/api/races/${race.slug}/startlist`
           ).then(res => res.json());
 
           const riderEntry = startlist.find(

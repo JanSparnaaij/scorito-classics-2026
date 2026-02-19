@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Race } from 'core';
+import { API_URL } from '../config';
 
 function App() {
   const [races, setRaces] = useState<Race[]>([]);
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/races')
+    fetch(`${API_URL}/api/races`)
       .then(res => res.json())
       .then(data => setRaces(data.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())));
   }, []);
@@ -15,7 +16,7 @@ function App() {
   const handleSync = async () => {
     setSyncing(true);
     try {
-      await fetch('http://localhost:3000/api/races/sync', { method: 'POST' });
+      await fetch(`${API_URL}/api/races/sync`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
       alert('Sync complete! Refresh the page to see updated data.');
     } catch (error) {
       alert('Sync failed: ' + error);

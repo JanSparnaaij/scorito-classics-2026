@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Race } from 'core';
+import { API_URL } from '../config';
 
 interface RaceParticipation {
   id: string;
@@ -22,14 +23,14 @@ function TeamDetail() {
     const decodedTeamName = decodeURIComponent(teamName);
 
     // Fetch all races and find ones with this team
-    fetch('http://localhost:3000/api/races')
+    fetch(`${API_URL}/api/races`)
       .then(res => res.json())
       .then(async (allRaces: Race[]) => {
         const teamRaces: RaceParticipation[] = [];
 
         for (const race of allRaces) {
           const startlist = await fetch(
-            `http://localhost:3000/api/races/${race.slug}/startlist`
+            `${API_URL}/api/races/${race.slug}/startlist`
           ).then(res => res.json());
 
           const teamRiders = startlist.filter(
