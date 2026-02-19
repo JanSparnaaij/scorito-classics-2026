@@ -13,31 +13,6 @@ const server = Fastify({
   logger: true,
 });
 
-server.register(cors, {
-  origin: '*', // Allow all origins for simplicity in this example
-});
-
-// Root health check endpoint
-server.get('/', async (request, reply) => {
-  try {
-    return {
-      status: 'ok',
-      message: 'Scorito Classics 2026 API',
-      endpoints: {
-        races: '/api/races',
-        syncRaces: 'POST /api/races/sync',
-        startlist: '/api/races/:slug/startlist'
-      }
-    };
-  } catch (error) {
-    server.log.error(error);
-    reply.code(500);
-    return { error: 'Internal server error', details: error };
-  }
-});
-
-server.register(routes, { prefix: '/api' });
-
 // Add heartbeat to keep process alive
 setInterval(() => {
   console.log(`[Heartbeat] Server is alive at ${new Date().toISOString()}`);
@@ -61,6 +36,27 @@ const start = async () => {
       });
       console.log('Prisma Client generated successfully');
     }
+
+    // Register plugins
+    await server.register(cors, {
+      origin: '*',
+    });
+
+    // Root health check endpoint
+    server.get('/', async (request, reply) => {
+      return {
+        status: 'ok',
+        message: 'Scorito Classics 2026 API',
+        endpoints: {
+          races: '/api/races',
+          syncRaces: 'POST /api/races/sync',
+          startlist: '/api/races/:slug/startlist'
+        }
+      };
+    });
+
+    // Register API routes
+    await server.register(routes, { prefix: '/api' });
 
     const port = parseInt(process.env.PORT || '3000', 10);
     await server.listen({ port, host: '0.0.0.0' });
