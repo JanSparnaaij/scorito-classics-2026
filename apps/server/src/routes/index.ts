@@ -51,7 +51,8 @@ export default async function (fastify: FastifyInstance) {
   });
 
   fastify.post('/races/sync', async (request, reply) => {
-    const scraper = new PcsScraper(process.env.USER_AGENT || 'scorito-classics-2026');
+    // Use fetch instead of Playwright (no browser needed in container)
+    const scraper = new PcsScraper(process.env.USER_AGENT || 'scorito-classics-2026', false);
     const races = await prisma.race.findMany();
     
     for (const race of races) {
