@@ -67,6 +67,21 @@ const start = async () => {
       return { status: 'healthy', timestamp: new Date().toISOString() };
     });
 
+    // Ultra simple sync endpoint for testing
+    server.get('/ping', (request, reply) => {
+      reply.send('pong');
+    });
+
+    // Debug endpoint
+    server.get('/debug', (request, reply) => {
+      reply.send({
+        port: process.env.PORT,
+        nodeEnv: process.env.NODE_ENV,
+        railwayEnv: process.env.RAILWAY_ENVIRONMENT,
+        hasDatabase: !!process.env.DATABASE_URL
+      });
+    });
+
     // Register API routes
     try {
       await server.register(routes, { prefix: '/api' });
@@ -78,7 +93,16 @@ const start = async () => {
 
     const port = parseInt(process.env.PORT || '3000', 10);
     await server.listen({ port, host: '0.0.0.0' });
+    
     console.log(`✅ Server successfully started and listening on http://0.0.0.0:${port}`);
+    console.log('Registered routes:');
+    console.log(server.printRoutes());
+    console.log('Server is ready to accept connections');
+    
+    // Test if server actually responds
+    setTimeout(() => {
+      console.log('[Self-test] Server is still running after 5 seconds');
+    }, 5000);
     
     // Keep the process alive
     process.on('SIGTERM', () => {
