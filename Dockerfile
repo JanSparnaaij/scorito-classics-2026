@@ -43,5 +43,5 @@ RUN pnpm build
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Run migrations and start server
-CMD ["/bin/sh", "-c", "cd /app/packages/db && pnpm prisma migrate deploy && cd /app && exec pnpm --filter server exec tsx src/index.ts"]
+# Start the server (migrations run automatically in index.ts)
+CMD ["pnpm", "--filter", "server", "exec", "tsx", "src/index.ts"]

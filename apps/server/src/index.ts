@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import { execSync } from 'child_process';
 
 // Load .env from the monorepo root
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
@@ -33,6 +34,16 @@ server.register(routes, { prefix: '/api' });
 
 const start = async () => {
   try {
+    // Run database migrations in production
+    if (process.env.NODE_ENV === 'production' || process.env.DATABASE_URL?.includes('postgresql')) {
+      console.log('Running database migrations...');
+      execSync('cd packages/db && pnpm prisma migrate deploy', {
+        stdio: 'inherit',
+        cwd: path.resolve(__dirname, '../../..'),
+      });
+      console.log('Migrations completed successfully');
+    }
+
     const port = parseInt(process.env.PORT || '3000', 10);
     await server.listen({ port, host: '0.0.0.0' });
   } catch (err) {
