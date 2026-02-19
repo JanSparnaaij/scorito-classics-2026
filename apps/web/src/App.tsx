@@ -51,6 +51,7 @@ function App() {
     <div className="flex h-screen bg-gray-100">
       <aside className="w-64 bg-white p-4">
         <h1 className="text-xl font-bold mb-4">Scorito Classics 2026</h1>
+        <p className="text-xs text-gray-500 mb-2">API: {API_URL}</p>
         <nav>
           <ul>
             {races.map(race => (
