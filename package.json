@@ -6,7 +6,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "vitest run",
-    "postinstall": "pnpm --filter db exec prisma generate",
+    "db:generate": "pnpm --filter db exec prisma generate",
     "db:migrate": "pnpm --filter db exec prisma migrate dev",
     "db:seed": "pnpm --filter db exec tsx packages/db/seed.ts",
     "sync:race": "pnpm --filter server exec tsx src/sync-race.ts",
