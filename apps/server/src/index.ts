@@ -20,7 +20,8 @@ server.register(routes, { prefix: '/api' });
 
 const start = async () => {
   try {
-    await server.listen({ port: 3000 });
+    const port = parseInt(process.env.PORT || '3000', 10);
+    await server.listen({ port, host: '0.0.0.0' });
   } catch (err) {
     server.log.error(err);
     process.exit(1);
