@@ -92,6 +92,7 @@ const start = async () => {
     }
 
     const port = parseInt(process.env.PORT || '3000', 10);
+    console.log(`Attempting to listen on port: ${port} (from PORT env: ${process.env.PORT})`);
     await server.listen({ port, host: '0.0.0.0' });
     
     console.log(`✅ Server successfully started and listening on http://0.0.0.0:${port}`);
