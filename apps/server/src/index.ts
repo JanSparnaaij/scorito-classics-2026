@@ -19,15 +19,21 @@ server.register(cors, {
 
 // Root health check endpoint
 server.get('/', async (request, reply) => {
-  return {
-    status: 'ok',
-    message: 'Scorito Classics 2026 API',
-    endpoints: {
-      races: '/api/races',
-      syncRaces: 'POST /api/races/sync',
-      startlist: '/api/races/:slug/startlist'
-    }
-  };
+  try {
+    return {
+      status: 'ok',
+      message: 'Scorito Classics 2026 API',
+      endpoints: {
+        races: '/api/races',
+        syncRaces: 'POST /api/races/sync',
+        startlist: '/api/races/:slug/startlist'
+      }
+    };
+  } catch (error) {
+    server.log.error(error);
+    reply.code(500);
+    return { error: 'Internal server error', details: error };
+  }
 });
 
 server.register(routes, { prefix: '/api' });
@@ -42,6 +48,13 @@ const start = async () => {
         cwd: path.resolve(__dirname, '../../..'),
       });
       console.log('Migrations completed successfully');
+      
+      console.log('Regenerating Prisma Client...');
+      execSync('cd packages/db && pnpm prisma generate', {
+        stdio: 'inherit',
+        cwd: path.resolve(__dirname, '../../..'),
+      });
+      console.log('Prisma Client generated successfully');
     }
 
     const port = parseInt(process.env.PORT || '3000', 10);
