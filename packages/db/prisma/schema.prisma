@@ -1,0 +1,63 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Race {
+  id           String           @id @default(cuid())
+  slug         String           @unique
+  name         String
+  date         DateTime
+  sourceUrl    String
+  startlist    StartlistEntry[]
+}
+
+model Rider {
+  id              String            @id @default(cuid())
+  pcsId           String?           @unique
+  name            String
+  team            String?
+  nationality     String?
+  startlistEntries StartlistEntry[]
+  rankingSnapshots RankingSnapshot[]
+  prices          Price[]
+}
+
+model StartlistEntry {
+  id        String   @id @default(cuid())
+  race      Race     @relation(fields: [raceId], references: [id])
+  raceId    String
+  rider     Rider    @relation(fields: [riderId], references: [id])
+  riderId   String
+  dorsal    Int?
+  team      String
+  createdAt DateTime @default(now())
+
+  @@unique([raceId, riderId])
+}
+
+model RankingSnapshot {
+  id          String   @id @default(cuid())
+  rider       Rider    @relation(fields: [riderId], references: [id])
+  riderId     String
+  rankingType String
+  points      Int
+  capturedAt  DateTime @default(now())
+
+  @@index([riderId, rankingType])
+}
+
+model Price {
+  id         String   @id @default(cuid())
+  rider      Rider    @relation(fields: [riderId], references: [id])
+  riderId    String
+  source     String // e.g., "scorito", "manual-csv"
+  amountEUR  Float
+  capturedAt DateTime @default(now())
+
+  @@index([riderId, source])
+}

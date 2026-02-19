@@ -1,0 +1,28 @@
+{
+  "name": "scorito-classics-2026",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "vitest run",
+    "postinstall": "pnpm --filter db exec prisma generate",
+    "db:migrate": "pnpm --filter db exec prisma migrate dev",
+    "db:seed": "pnpm --filter db exec tsx packages/db/seed.ts",
+    "sync:race": "pnpm --filter server exec tsx src/sync-race.ts",
+    "sync:all": "pnpm --filter server exec tsx src/sync-all.ts",
+    "import:prices": "pnpm --filter server exec tsx src/import-prices.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.5",
+    "tsx": "^4.7.1",
+    "tsup": "^8.0.2",
+    "turbo": "^1.12.3",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.2",
+    "zod": "^3.22.4"
+  },
+  "packageManager": "pnpm@8.15.4"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "scraping",
+  "version": "1.0.0",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "playwright": "^1.41.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/cheerio": "^0.22.35",
+    "core": "workspace:*"
+  }
+}

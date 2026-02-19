@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "module": "CommonJS",
+    "paths": {
+      "@db/*": ["../../packages/db/*"],
+      "@scraping": ["../../packages/scraping/index.ts"],
+      "@scraping/*": ["../../packages/scraping/*"],
+      "@core": ["../../packages/core/index.ts"],
+      "@core/*": ["../../packages/core/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
