@@ -107,4 +107,27 @@ export default async function (fastify: FastifyInstance) {
     return startlist;
   });
 
+  // Delete a race by slug
+  fastify.delete('/races/:slug', async (request, reply) => {
+    const { slug } = request.params as { slug: string };
+    
+    // First delete all startlist entries for this race
+    const race = await prisma.race.findUnique({ where: { slug } });
+    if (!race) {
+      reply.code(404);
+      return { error: 'Race not found' };
+    }
+    
+    await prisma.startlistEntry.deleteMany({
+      where: { raceId: race.id }
+    });
+    
+    // Then delete the race itself
+    await prisma.race.delete({
+      where: { slug }
+    });
+    
+    return { message: `Race ${slug} deleted successfully` };
+  });
+
 }
