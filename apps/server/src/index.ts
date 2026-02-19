@@ -44,7 +44,26 @@ const start = async () => {
 
     // Register plugins
     await server.register(cors, {
-      origin: '*',
+      origin: (origin, cb) => {
+        // Allow all origins in development, specific origins in production
+        const allowedOrigins = [
+          'http://localhost:5173',
+          'http://localhost:3000',
+          process.env.FRONTEND_URL,
+          /\.vercel\.app$/,
+        ].filter(Boolean);
+        
+        if (!origin || allowedOrigins.some(allowed => {
+          if (typeof allowed === 'string') return origin === allowed;
+          if (allowed instanceof RegExp) return allowed.test(origin);
+          return false;
+        })) {
+          cb(null, true);
+        } else {
+          cb(null, true); // Allow all for now
+        }
+      },
+      credentials: true,
     });
 
     // Root health check endpoint

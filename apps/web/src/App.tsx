@@ -8,6 +8,11 @@ function App() {
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [startlist, setStartlist] = useState<any[]>([]);
 
+  // Debug: log API URL on mount
+  useEffect(() => {
+    console.log('API_URL configured as:', API_URL);
+  }, []);
+
   useEffect(() => {
     fetch(`${API_URL}/api/races`)
       .then(res => res.json())
@@ -15,8 +20,22 @@ function App() {
   }, []);
 
   const handleSync = async () => {
-    await fetch(`${API_URL}/api/races/sync`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-    alert('Sync complete!');
+    try {
+      console.log('Syncing with API URL:', API_URL);
+      const response = await fetch(`${API_URL}/api/races/sync`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: '{}' 
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const data = await response.json();
+      alert(`Sync complete! ${data.message || ''}`);
+    } catch (error) {
+      console.error('Sync failed:', error);
+      alert(`Sync failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
   };
 
   const fetchStartlist = (slug: string) => {
