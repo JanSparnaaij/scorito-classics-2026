@@ -28,7 +28,11 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Generate Prisma client
-RUN pnpm --filter db prisma generate
+WORKDIR /app/packages/db
+RUN pnpm prisma generate
+
+# Return to app directory
+WORKDIR /app
 
 # Build the application
 RUN pnpm build
