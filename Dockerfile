@@ -40,8 +40,5 @@ WORKDIR /app
 # Build the application
 RUN pnpm build
 
-# Expose the port the app runs on
-EXPOSE 3000
-
 # Start the server (migrations run automatically in index.ts)
 CMD ["pnpm", "--filter", "server", "exec", "tsx", "src/index.ts"]
