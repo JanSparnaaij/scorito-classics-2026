@@ -1,5 +1,8 @@
-# Use Node 20 which has the File API required by undici
-FROM node:20-alpine
+# Use Debian-based Node 20 for better Prisma compatibility
+FROM node:20-slim
+
+# Install OpenSSL for Prisma
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 WORKDIR /app
