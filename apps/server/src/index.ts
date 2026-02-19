@@ -38,6 +38,11 @@ server.get('/', async (request, reply) => {
 
 server.register(routes, { prefix: '/api' });
 
+// Add heartbeat to keep process alive
+setInterval(() => {
+  console.log(`[Heartbeat] Server is alive at ${new Date().toISOString()}`);
+}, 60000); // Every 60 seconds
+
 const start = async () => {
   try {
     // Run database migrations in production
@@ -59,7 +64,17 @@ const start = async () => {
 
     const port = parseInt(process.env.PORT || '3000', 10);
     await server.listen({ port, host: '0.0.0.0' });
+    console.log(`✅ Server successfully started and listening on http://0.0.0.0:${port}`);
+    
+    // Keep the process alive
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM signal received: closing HTTP server');
+      server.close(() => {
+        console.log('HTTP server closed');
+      });
+    });
   } catch (err) {
+    console.error('❌ Fatal error during startup:', err);
     server.log.error(err);
     process.exit(1);
   }
