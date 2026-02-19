@@ -1,8 +1,36 @@
 import { FastifyInstance } from 'fastify';
 import prisma from 'db/client';
 import { PcsScraper, normalizeRiderName } from 'scraping';
+import fs from 'fs';
+import yaml from 'js-yaml';
+import path from 'path';
 
 export default async function (fastify: FastifyInstance) {
+  
+  // Seed races from YAML config
+  fastify.post('/races/seed', async (request, reply) => {
+    const racesFile = path.join(__dirname, '../../../config/races.classics-2026.yaml');
+    const races: any[] = yaml.load(fs.readFileSync(racesFile, 'utf8')) as any[];
+
+    for (const race of races) {
+      await prisma.race.upsert({
+        where: { slug: race.slug },
+        update: {
+          name: race.name,
+          date: new Date(race.date),
+          sourceUrl: race.url,
+        },
+        create: {
+          slug: race.slug,
+          name: race.name,
+          date: new Date(race.date),
+          sourceUrl: race.url,
+        },
+      });
+    }
+    
+    return { message: `Seeded ${races.length} races successfully` };
+  });
   
   fastify.get('/races', async (request, reply) => {
     const races = await prisma.race.findMany();
