@@ -43,5 +43,5 @@ RUN pnpm build
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Start the application with tsx to support TypeScript workspace packages
-CMD ["pnpm", "--filter", "server", "exec", "tsx", "src/index.ts"]
+# Start script that runs migrations and starts the server
+CMD ["sh", "-c", "cd /app/packages/db && pnpm prisma migrate deploy && cd /app && pnpm --filter server exec tsx src/index.ts"]
