@@ -14,11 +14,12 @@
     "import:prices": "pnpm --filter server exec tsx src/import-prices.ts"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.11.17",
     "eslint": "^8.56.0",
     "prettier": "^3.2.5",
-    "tsx": "^4.7.1",
     "tsup": "^8.0.2",
+    "tsx": "^4.7.1",
     "turbo": "^1.12.3",
     "typescript": "^5.3.3",
     "vitest": "^1.2.2",
