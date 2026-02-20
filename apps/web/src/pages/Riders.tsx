@@ -25,6 +25,7 @@ function Riders() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'races' | 'pricePerRace'>('price');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     fetch(`${API_URL}/api/riders`)
@@ -58,25 +59,37 @@ function Riders() {
     return price / raceCount;
   };
 
+  const handleSort = (newSort: 'name' | 'price' | 'races' | 'pricePerRace') => {
+    if (sortBy === newSort) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(newSort);
+      setSortDirection('desc');
+    }
+  };
+
   const filteredRiders = riders
     .filter(rider =>
       rider.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
+      let comparison = 0;
+      
       if (sortBy === 'price') {
         const priceA = getPrice(a) || 0;
         const priceB = getPrice(b) || 0;
-        return priceB - priceA;
-      }
-      if (sortBy === 'races') {
-        return getRaceCount(b) - getRaceCount(a);
-      }
-      if (sortBy === 'pricePerRace') {
+        comparison = priceB - priceA;
+      } else if (sortBy === 'races') {
+        comparison = getRaceCount(b) - getRaceCount(a);
+      } else if (sortBy === 'pricePerRace') {
         const perRaceA = getPricePerRace(a) || 0;
         const perRaceB = getPricePerRace(b) || 0;
-        return perRaceB - perRaceA;
+        comparison = perRaceB - perRaceA;
+      } else {
+        comparison = a.name.localeCompare(b.name);
       }
-      return a.name.localeCompare(b.name);
+      
+      return sortDirection === 'asc' ? -comparison : comparison;
     });
 
   return (
@@ -99,44 +112,44 @@ function Riders() {
             </h2>
             <div className="flex gap-2">
               <button
-                onClick={() => setSortBy('name')}
+                onClick={() => handleSort('name')}
                 className={`px-4 py-2 rounded-lg font-semibold transition ${
                   sortBy === 'name'
                     ? 'bg-indigo-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Sort by Name
+                Sort by Name {sortBy === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
               </button>
               <button
-                onClick={() => setSortBy('price')}
+                onClick={() => handleSort('price')}
                 className={`px-4 py-2 rounded-lg font-semibold transition ${
                   sortBy === 'price'
                     ? 'bg-indigo-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Sort by Price
+                Sort by Price {sortBy === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}
               </button>
               <button
-                onClick={() => setSortBy('races')}
+                onClick={() => handleSort('races')}
                 className={`px-4 py-2 rounded-lg font-semibold transition ${
                   sortBy === 'races'
                     ? 'bg-indigo-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Sort by Races
+                Sort by Races {sortBy === 'races' && (sortDirection === 'asc' ? '↑' : '↓')}
               </button>
               <button
-                onClick={() => setSortBy('pricePerRace')}
+                onClick={() => handleSort('pricePerRace')}
                 className={`px-4 py-2 rounded-lg font-semibold transition ${
                   sortBy === 'pricePerRace'
                     ? 'bg-indigo-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Sort by Price/Race
+                Sort by Price/Race {sortBy === 'pricePerRace' && (sortDirection === 'asc' ? '↑' : '↓')}
               </button>
             </div>
           </div>

@@ -30,6 +30,7 @@ function RaceStartlist() {
   const [loading, setLoading] = useState(true);
   const [groupByTeam, setGroupByTeam] = useState(false);
   const [sortBy, setSortBy] = useState<'dorsal' | 'name' | 'price'>('dorsal');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     if (!slug) return;
@@ -66,19 +67,32 @@ function RaceStartlist() {
     return entry.rider.prices[0].amountEUR;
   };
 
+  const handleSort = (newSort: 'dorsal' | 'name' | 'price') => {
+    if (sortBy === newSort) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(newSort);
+      setSortDirection(newSort === 'dorsal' ? 'asc' : 'desc');
+    }
+  };
+
   const sortedStartlist = [...startlist].sort((a, b) => {
+    let comparison = 0;
+    
     if (sortBy === 'price') {
       const priceA = getPrice(a) || 0;
       const priceB = getPrice(b) || 0;
-      return priceB - priceA;
+      comparison = priceB - priceA;
+    } else if (sortBy === 'name') {
+      comparison = a.rider.name.localeCompare(b.rider.name);
+    } else {
+      // dorsal
+      const aDorsal = parseInt(a.dorsal) || 999;
+      const bDorsal = parseInt(b.dorsal) || 999;
+      comparison = aDorsal - bDorsal;
     }
-    if (sortBy === 'name') {
-      return a.rider.name.localeCompare(b.rider.name);
-    }
-    // dorsal
-    const aDorsal = parseInt(a.dorsal) || 999;
-    const bDorsal = parseInt(b.dorsal) || 999;
-    return aDorsal - bDorsal;
+    
+    return sortDirection === 'asc' ? comparison : -comparison;
   });
 
   if (loading) {
@@ -114,34 +128,34 @@ function RaceStartlist() {
           <div className="flex gap-2">
             <div className="flex gap-1 bg-white rounded-lg shadow-sm p-1">
               <button
-                onClick={() => setSortBy('dorsal')}
+                onClick={() => handleSort('dorsal')}
                 className={`px-3 py-2 rounded font-semibold transition text-sm ${
                   sortBy === 'dorsal'
                     ? 'bg-indigo-600 text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Dorsal
+                Dorsal {sortBy === 'dorsal' && (sortDirection === 'asc' ? '↑' : '↓')}
               </button>
               <button
-                onClick={() => setSortBy('name')}
+                onClick={() => handleSort('name')}
                 className={`px-3 py-2 rounded font-semibold transition text-sm ${
                   sortBy === 'name'
                     ? 'bg-indigo-600 text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Name
+                Name {sortBy === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
               </button>
               <button
-                onClick={() => setSortBy('price')}
+                onClick={() => handleSort('price')}
                 className={`px-3 py-2 rounded font-semibold transition text-sm ${
                   sortBy === 'price'
                     ? 'bg-indigo-600 text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Price
+                Price {sortBy === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}
               </button>
             </div>
             <button
