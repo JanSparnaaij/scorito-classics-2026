@@ -110,6 +110,64 @@ const start = async () => {
       // Continue without API routes for debugging
     }
 
+    // Auto-seed prices from YAML config
+    const seedPrices = async () => {
+      try {
+        const fs = require('fs');
+        const yaml = require('js-yaml');
+        const prisma = require('db/client').default;
+        
+        const pricesFile = path.join(__dirname, '../../../config/prices.classics-2026.yaml');
+        
+        if (!fs.existsSync(pricesFile)) {
+          console.log('⚠️  Prices file not found, skipping auto-seed');
+          return;
+        }
+
+        const prices: any[] = yaml.load(fs.readFileSync(pricesFile, 'utf8')) as any[];
+        
+        let created = 0;
+        let updated = 0;
+
+        for (const priceEntry of prices) {
+          const existingPrice = await prisma.price.findFirst({
+            where: {
+              riderId: priceEntry.riderId,
+              source: priceEntry.source,
+            },
+          });
+
+          if (existingPrice) {
+            await prisma.price.update({
+              where: { id: existingPrice.id },
+              data: {
+                amountEUR: priceEntry.amountEUR,
+                capturedAt: new Date(),
+              },
+            });
+            updated++;
+          } else {
+            await prisma.price.create({
+              data: {
+                riderId: priceEntry.riderId,
+                source: priceEntry.source,
+                amountEUR: priceEntry.amountEUR,
+                capturedAt: new Date(),
+              },
+            });
+            created++;
+          }
+        }
+        
+        console.log(`✅ Auto-seeded prices: ${created} created, ${updated} updated (total: ${prices.length})`);
+      } catch (err) {
+        console.error('⚠️  Auto-seed prices failed (non-fatal):', err);
+      }
+    };
+
+    // Run auto-seed before listening
+    await seedPrices();
+
     const port = parseInt(process.env.PORT || '3000', 10);
     console.log(`Attempting to listen on port: ${port} (from PORT env: ${process.env.PORT})`);
     await server.listen({ port, host: '0.0.0.0' });
