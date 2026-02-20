@@ -17,7 +17,10 @@ function Teams() {
     fetch(`${API_URL}/api/races`)
       .then(res => res.json())
       .then(async (allRaces: Race[]) => {
-        const teamMap = new Map<string, { races: number; riders: number }>();
+        // Map: team name -> Set of race IDs
+        const teamRaceMap = new Map<string, Set<string>>();
+        // Map: team name -> Set of rider IDs
+        const teamRiderMap = new Map<string, Set<string>>();
 
         for (const race of allRaces) {
           const startlist = await fetch(
@@ -25,37 +28,27 @@ function Teams() {
           ).then(res => res.json());
 
           startlist.forEach((entry: any) => {
-            if (!teamMap.has(entry.team)) {
-              teamMap.set(entry.team, { races: 0, riders: 0 });
+            const teamName = entry.team;
+            
+            // Track races per team
+            if (!teamRaceMap.has(teamName)) {
+              teamRaceMap.set(teamName, new Set());
             }
-            const stats = teamMap.get(entry.team)!;
-            stats.riders++;
-            stats.races = new Set(
-              [...Array.from(teamMap.values())].map(v => v.races)
-            ).size;
-          });
+            teamRaceMap.get(teamName)!.add(race.id);
 
-          // Count unique races per team
-          const teamRaces = new Map<string, Set<string>>();
-          startlist.forEach((entry: any) => {
-            if (!teamRaces.has(entry.team)) {
-              teamRaces.set(entry.team, new Set());
+            // Track unique riders per team
+            if (!teamRiderMap.has(teamName)) {
+              teamRiderMap.set(teamName, new Set());
             }
-            teamRaces.get(entry.team)!.add(race.id);
-          });
-
-          // Update races count
-          teamRaces.forEach((raceSet, teamName) => {
-            const current = teamMap.get(teamName)!;
-            current.races = raceSet.size;
+            teamRiderMap.get(teamName)!.add(entry.rider.id);
           });
         }
 
-        const teamList = Array.from(teamMap.entries())
-          .map(([name, stats]) => ({
+        const teamList = Array.from(teamRaceMap.entries())
+          .map(([name, raceSet]) => ({
             name,
-            races: stats.races,
-            riders: stats.riders,
+            races: raceSet.size,
+            riders: teamRiderMap.get(name)?.size || 0,
           }))
           .sort((a, b) => b.riders - a.riders);
 
