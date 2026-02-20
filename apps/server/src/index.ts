@@ -114,7 +114,7 @@ const start = async () => {
       // Continue without API routes for debugging
     }
 
-    // Auto-seed prices from YAML config
+    // Auto-seed prices from YAML config (NEVER create new riders, only seed prices for existing riderIds)
     const seedPrices = async () => {
       try {
         const pricesFile = path.join(__dirname, '../../../config/prices.classics-2026.yaml');
@@ -141,7 +141,7 @@ const start = async () => {
               continue;
             }
 
-            // Check if rider exists first
+            // CRITICAL: Check if rider exists. If not, SKIP (never create new riders)
             const rider = await prisma.rider.findUnique({
               where: { id: priceEntry.riderId }
             });
@@ -151,9 +151,10 @@ const start = async () => {
                 console.log(`❌ 750K rider NOT FOUND: ${priceEntry.scoritoName} (ID: ${priceEntry.riderId})`);
               }
               skipped++;
-              continue;
+              continue; // SKIP - do not create new riders
             }
 
+            // Rider exists, now upsert the price
             const existingPrice = await prisma.price.findFirst({
               where: {
                 riderId: priceEntry.riderId,
@@ -162,6 +163,7 @@ const start = async () => {
             });
 
             if (existingPrice) {
+              // Update existing price
               await prisma.price.update({
                 where: { id: existingPrice.id },
                 data: {
@@ -174,6 +176,7 @@ const start = async () => {
               }
               updated++;
             } else {
+              // Create NEW price (only because rider exists)
               await prisma.price.create({
                 data: {
                   riderId: priceEntry.riderId,
@@ -190,7 +193,7 @@ const start = async () => {
           } catch (err: any) {
             // Log individual errors for debugging
             if (priceEntry.amountEUR === 750000) {
-              console.log(`⚠️  750K entry skipped: ${priceEntry.scoritoName} - ${err.message}`);
+              console.log(`⚠️  750K entry error: ${priceEntry.scoritoName} - ${err.message}`);
             }
             skipped++;
           }
