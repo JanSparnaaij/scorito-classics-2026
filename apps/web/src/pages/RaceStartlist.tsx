@@ -29,6 +29,7 @@ function RaceStartlist() {
   const [startlist, setStartlist] = useState<StartlistEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupByTeam, setGroupByTeam] = useState(false);
+  const [sortBy, setSortBy] = useState<'dorsal' | 'name' | 'price'>('dorsal');
 
   useEffect(() => {
     if (!slug) return;
@@ -45,11 +46,7 @@ function RaceStartlist() {
     fetch(`${API_URL}/api/races/${slug}/startlist`)
       .then(res => res.json())
       .then(data => {
-        setStartlist(data.sort((a: StartlistEntry, b: StartlistEntry) => {
-          const aDorsal = parseInt(a.dorsal) || 999;
-          const bDorsal = parseInt(b.dorsal) || 999;
-          return aDorsal - bDorsal;
-        }));
+        setStartlist(data);
       })
       .finally(() => setLoading(false));
   }, [slug]);
@@ -68,6 +65,21 @@ function RaceStartlist() {
     if (!entry.rider.prices || entry.rider.prices.length === 0) return null;
     return entry.rider.prices[0].amountEUR;
   };
+
+  const sortedStartlist = [...startlist].sort((a, b) => {
+    if (sortBy === 'price') {
+      const priceA = getPrice(a) || 0;
+      const priceB = getPrice(b) || 0;
+      return priceB - priceA;
+    }
+    if (sortBy === 'name') {
+      return a.rider.name.localeCompare(b.rider.name);
+    }
+    // dorsal
+    const aDorsal = parseInt(a.dorsal) || 999;
+    const bDorsal = parseInt(b.dorsal) || 999;
+    return aDorsal - bDorsal;
+  });
 
   if (loading) {
     return (
@@ -99,12 +111,46 @@ function RaceStartlist() {
           <h2 className="text-xl font-bold text-gray-800">
             {startlist.length} renners
           </h2>
-          <button
-            onClick={() => setGroupByTeam(!groupByTeam)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition"
-          >
-            {groupByTeam ? 'Show as List' : 'Group by Team'}
-          </button>
+          <div className="flex gap-2">
+            <div className="flex gap-1 bg-white rounded-lg shadow-sm p-1">
+              <button
+                onClick={() => setSortBy('dorsal')}
+                className={`px-3 py-2 rounded font-semibold transition text-sm ${
+                  sortBy === 'dorsal'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Dorsal
+              </button>
+              <button
+                onClick={() => setSortBy('name')}
+                className={`px-3 py-2 rounded font-semibold transition text-sm ${
+                  sortBy === 'name'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Name
+              </button>
+              <button
+                onClick={() => setSortBy('price')}
+                className={`px-3 py-2 rounded font-semibold transition text-sm ${
+                  sortBy === 'price'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Price
+              </button>
+            </div>
+            <button
+              onClick={() => setGroupByTeam(!groupByTeam)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition"
+            >
+              {groupByTeam ? 'Show as List' : 'Group by Team'}
+            </button>
+          </div>
         </div>
 
         {startlist.length === 0 ? (
@@ -169,7 +215,7 @@ function RaceStartlist() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {startlist.map(entry => {
+                {sortedStartlist.map(entry => {
                   const price = getPrice(entry);
                   return (
                     <tr key={entry.id} className="hover:bg-indigo-50 transition">
