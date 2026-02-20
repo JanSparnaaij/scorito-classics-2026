@@ -39,7 +39,13 @@ export default async function (fastify: FastifyInstance) {
 
   fastify.get('/riders', async (request, reply) => {
     const riders = await prisma.rider.findMany({
-      take: 100,
+      include: {
+        prices: {
+          where: { source: 'scorito-2026' },
+          orderBy: { capturedAt: 'desc' },
+          take: 1,
+        },
+      },
       orderBy: { name: 'asc' }
     });
     return riders;
@@ -128,6 +134,71 @@ export default async function (fastify: FastifyInstance) {
     });
     
     return { message: `Race ${slug} deleted successfully` };
+  });
+
+  // Seed prices from YAML config
+  fastify.post('/prices/seed', async (request, reply) => {
+    const pricesFile = path.join(__dirname, '../../../../config/prices.classics-2026.yaml');
+    const prices: any[] = yaml.load(fs.readFileSync(pricesFile, 'utf8')) as any[];
+
+    let created = 0;
+    let updated = 0;
+
+    for (const priceEntry of prices) {
+      const existingPrice = await prisma.price.findFirst({
+        where: {
+          riderId: priceEntry.riderId,
+          source: priceEntry.source,
+        },
+      });
+
+      if (existingPrice) {
+        await prisma.price.update({
+          where: { id: existingPrice.id },
+          data: {
+            amountEUR: priceEntry.amountEUR,
+            capturedAt: new Date(),
+          },
+        });
+        updated++;
+      } else {
+        await prisma.price.create({
+          data: {
+            riderId: priceEntry.riderId,
+            source: priceEntry.source,
+            amountEUR: priceEntry.amountEUR,
+            capturedAt: new Date(),
+          },
+        });
+        created++;
+      }
+    }
+    
+    return { 
+      message: `Seeded prices successfully`, 
+      created,
+      updated,
+      total: prices.length 
+    };
+  });
+
+  // Get all prices
+  fastify.get('/prices', async (request, reply) => {
+    const prices = await prisma.price.findMany({
+      include: { rider: true },
+      orderBy: { amountEUR: 'desc' },
+    });
+    return prices;
+  });
+
+  // Get prices for a specific rider
+  fastify.get('/riders/:riderId/prices', async (request, reply) => {
+    const { riderId } = request.params as { riderId: string };
+    const prices = await prisma.price.findMany({
+      where: { riderId },
+      orderBy: { capturedAt: 'desc' },
+    });
+    return prices;
   });
 
 }

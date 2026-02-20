@@ -1,63 +1,61 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Race } from 'core';
 import { API_URL } from '../config';
+
+interface Price {
+  id: string;
+  amountEUR: number;
+  source: string;
+  capturedAt: string;
+}
 
 interface Rider {
   id: string;
   name: string;
   team?: string;
-  races: number;
-  teams: Set<string>;
+  pcsId: string;
+  prices?: Price[];
 }
 
 function Riders() {
   const [riders, setRiders] = useState<Rider[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'price'>('price');
 
   useEffect(() => {
-    fetch(`${API_URL}/api/races`)
+    fetch(`${API_URL}/api/riders`)
       .then(res => res.json())
-      .then(async (allRaces: Race[]) => {
-        const riderMap = new Map<string, Rider>();
-
-        for (const race of allRaces) {
-          const startlist = await fetch(
-            `${API_URL}/api/races/${race.slug}/startlist`
-          ).then(res => res.json());
-
-          startlist.forEach((entry: any) => {
-            if (!riderMap.has(entry.rider.id)) {
-              riderMap.set(entry.rider.id, {
-                id: entry.rider.id,
-                name: entry.rider.name,
-                team: entry.team,
-                races: 0,
-                teams: new Set(),
-              });
-            }
-            const rider = riderMap.get(entry.rider.id)!;
-            rider.races++;
-            rider.teams.add(entry.team);
-          });
-        }
-
-        const riderList = Array.from(riderMap.values())
-          .map(rider => ({
-            ...rider,
-            teams: rider.teams,
-          }))
-          .sort((a, b) => b.races - a.races);
-
-        setRiders(riderList);
+      .then((data: Rider[]) => {
+        setRiders(data);
       })
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredRiders = riders.filter(rider =>
-    rider.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const formatPrice = (amountEUR: number) => {
+    if (amountEUR >= 1000000) {
+      return `€${(amountEUR / 1000000).toFixed(1)}M`;
+    }
+    return `€${(amountEUR / 1000).toFixed(0)}K`;
+  };
+
+  const getPrice = (rider: Rider): number | null => {
+    if (!rider.prices || rider.prices.length === 0) return null;
+    return rider.prices[0].amountEUR;
+  };
+
+  const filteredRiders = riders
+    .filter(rider =>
+      rider.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sortBy === 'price') {
+        const priceA = getPrice(a) || 0;
+        const priceB = getPrice(b) || 0;
+        return priceB - priceA;
+      }
+      return a.name.localeCompare(b.name);
+    });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -77,6 +75,28 @@ function Riders() {
             <h2 className="text-2xl font-bold text-gray-800">
               {filteredRiders.length} renners
             </h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSortBy('name')}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${
+                  sortBy === 'name'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Sort by Name
+              </button>
+              <button
+                onClick={() => setSortBy('price')}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${
+                  sortBy === 'price'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Sort by Price
+              </button>
+            </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-4">
@@ -110,59 +130,44 @@ function Riders() {
                   <tr>
                     <th className="px-6 py-4 text-left font-bold">Name</th>
                     <th className="px-6 py-4 text-left font-bold">Team</th>
-                    <th className="px-6 py-4 text-center font-bold">Races</th>
-                    <th className="px-6 py-4 text-left font-bold">Teams</th>
+                    <th className="px-6 py-4 text-right font-bold">Price</th>
                     <th className="px-6 py-4 text-center font-bold">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {filteredRiders.map(rider => (
-                    <tr
-                      key={rider.id}
-                      className="hover:bg-indigo-50 transition"
-                    >
-                      <td className="px-6 py-4 font-semibold text-gray-800">
-                        {rider.name}
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {rider.team || '—'}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-block bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">
-                          {rider.races}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-gray-600 text-sm">
-                        <div className="flex flex-wrap gap-1">
-                          {Array.from(rider.teams)
-                            .slice(0, 2)
-                            .map(team => (
-                              <span
-                                key={team}
-                                className="inline-block bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs"
-                              >
-                                {team}
-                              </span>
-                            ))}
-                          {rider.teams.size > 2 && (
-                            <span className="inline-block bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs">
-                              +{rider.teams.size - 2}
+                  {filteredRiders.map(rider => {
+                    const price = getPrice(rider);
+                    return (
+                      <tr
+                        key={rider.id}
+                        className="hover:bg-indigo-50 transition"
+                      >
+                        <td className="px-6 py-4 font-semibold text-gray-800">
+                          {rider.name}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600">
+                          {rider.team || '—'}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          {price ? (
+                            <span className="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold">
+                              {formatPrice(price)}
                             </span>
+                          ) : (
+                            <span className="text-gray-400 text-sm">—</span>
                           )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <Link
-                          to={`/rider/${rider.id}`}
-                          className="text-indigo-600 hover:text-indigo-700 font-semibold"
-                        >
-                          View →
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <Link
+                            to={`/rider/${rider.id}`}
+                            className="text-indigo-600 hover:text-indigo-700 font-semibold"
+                          >
+                            View →
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
             </div>
           </div>
         )}
