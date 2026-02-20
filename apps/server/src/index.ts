@@ -128,38 +128,54 @@ const start = async () => {
         
         let created = 0;
         let updated = 0;
+        let skipped = 0;
 
         for (const priceEntry of prices) {
-          const existingPrice = await prisma.price.findFirst({
-            where: {
-              riderId: priceEntry.riderId,
-              source: priceEntry.source,
-            },
-          });
-
-          if (existingPrice) {
-            await prisma.price.update({
-              where: { id: existingPrice.id },
-              data: {
-                amountEUR: priceEntry.amountEUR,
-                capturedAt: new Date(),
-              },
+          try {
+            // Check if rider exists first
+            const rider = await prisma.rider.findUnique({
+              where: { id: priceEntry.riderId }
             });
-            updated++;
-          } else {
-            await prisma.price.create({
-              data: {
+
+            if (!rider) {
+              skipped++;
+              continue;
+            }
+
+            const existingPrice = await prisma.price.findFirst({
+              where: {
                 riderId: priceEntry.riderId,
                 source: priceEntry.source,
-                amountEUR: priceEntry.amountEUR,
-                capturedAt: new Date(),
               },
             });
-            created++;
+
+            if (existingPrice) {
+              await prisma.price.update({
+                where: { id: existingPrice.id },
+                data: {
+                  amountEUR: priceEntry.amountEUR,
+                  capturedAt: new Date(),
+                },
+              });
+              updated++;
+            } else {
+              await prisma.price.create({
+                data: {
+                  riderId: priceEntry.riderId,
+                  source: priceEntry.source,
+                  amountEUR: priceEntry.amountEUR,
+                  capturedAt: new Date(),
+                },
+              });
+              created++;
+            }
+          } catch (err) {
+            // Skip individual price entries that fail
+            skipped++;
           }
         }
         
-        console.log(`✅ Auto-seeded prices: ${created} created, ${updated} updated (total: ${prices.length})`);
+        console.log(`✅ Auto-seeded prices: ${created} created, ${updated} updated, ${skipped} skipped (total: ${prices.length})`);
       } catch (err) {
         console.error('⚠️  Auto-seed prices failed (non-fatal):', err);
       }
