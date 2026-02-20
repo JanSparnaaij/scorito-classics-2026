@@ -132,6 +132,13 @@ const start = async () => {
 
         for (const priceEntry of prices) {
           try {
+            // Validate required fields
+            if (!priceEntry.riderId || !priceEntry.source || priceEntry.amountEUR === undefined) {
+              console.log(`⚠️  Skipping invalid entry: ${JSON.stringify(priceEntry)}`);
+              skipped++;
+              continue;
+            }
+
             // Check if rider exists first
             const rider = await prisma.rider.findUnique({
               where: { id: priceEntry.riderId }
@@ -169,13 +176,16 @@ const start = async () => {
               });
               created++;
             }
-          } catch (err) {
-            // Skip individual price entries that fail
+          } catch (err: any) {
+            // Log individual errors for 750K riders
+            if (priceEntry.amountEUR === 750000) {
+              console.error(`❌ Error seeding ${priceEntry.scoritoName}: ${err.message}`);
+            }
             skipped++;
           }
         }
         
-        console.log(`✅ Auto-seeded prices: ${created} created, ${updated} updated, ${skipped} skipped (total: ${prices.length})`);
+        console.log(`✅ Auto-seeded prices: ${created} created, ${updated} updated, ${skipped} skipped`);
       } catch (err) {
         console.error('⚠️  Auto-seed prices failed (non-fatal):', err);
       }

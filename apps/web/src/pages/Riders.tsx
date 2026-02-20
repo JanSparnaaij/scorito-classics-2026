@@ -26,6 +26,7 @@ function Riders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'races' | 'pricePerRace'>('price');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/riders`)
@@ -70,7 +71,8 @@ function Riders() {
 
   const filteredRiders = riders
     .filter(rider =>
-      rider.name.toLowerCase().includes(searchTerm.toLowerCase())
+      rider.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (selectedPrice === null || getPrice(rider) === selectedPrice)
     )
     .sort((a, b) => {
       let comparison = 0;
@@ -155,13 +157,42 @@ function Riders() {
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-4">
-            <input
-              type="text"
-              placeholder="Search riders..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
-            />
+            <div className="flex flex-col gap-4">
+              <input
+                type="text"
+                placeholder="Search riders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
+              />
+              
+              {/* Price filter */}
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setSelectedPrice(null)}
+                  className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
+                    selectedPrice === null
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  All Prices
+                </button>
+                {Array.from(new Set(riders.map(r => getPrice(r)).filter(p => p !== null) as number[])).sort((a, b) => b - a).map(price => (
+                  <button
+                    key={price}
+                    onClick={() => setSelectedPrice(price)}
+                    className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
+                      selectedPrice === price
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {formatPrice(price)}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
