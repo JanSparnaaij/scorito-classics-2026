@@ -168,6 +168,8 @@ function Riders() {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
