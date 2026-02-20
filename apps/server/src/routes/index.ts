@@ -45,6 +45,9 @@ export default async function (fastify: FastifyInstance) {
           orderBy: { capturedAt: 'desc' },
           take: 1,
         },
+        _count: {
+          select: { startlistEntries: true }
+        }
       },
       orderBy: { name: 'asc' }
     });

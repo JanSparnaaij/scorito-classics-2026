@@ -15,13 +15,16 @@ interface Rider {
   team?: string;
   pcsId: string;
   prices?: Price[];
+  _count?: {
+    startlistEntries: number;
+  };
 }
 
 function Riders() {
   const [riders, setRiders] = useState<Rider[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'price'>('price');
+  const [sortBy, setSortBy] = useState<'name' | 'price' | 'races'>('price');
 
   useEffect(() => {
     fetch(`${API_URL}/api/riders`)
@@ -44,6 +47,17 @@ function Riders() {
     return rider.prices[0].amountEUR;
   };
 
+  const getRaceCount = (rider: Rider): number => {
+    return rider._count?.startlistEntries || 0;
+  };
+
+  const getPricePerRace = (rider: Rider): number | null => {
+    const price = getPrice(rider);
+    const raceCount = getRaceCount(rider);
+    if (!price || raceCount === 0) return null;
+    return price / raceCount;
+  };
+
   const filteredRiders = riders
     .filter(rider =>
       rider.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -53,6 +67,9 @@ function Riders() {
         const priceA = getPrice(a) || 0;
         const priceB = getPrice(b) || 0;
         return priceB - priceA;
+      }
+      if (sortBy === 'races') {
+        return getRaceCount(b) - getRaceCount(a);
       }
       return a.name.localeCompare(b.name);
     });
@@ -96,6 +113,16 @@ function Riders() {
               >
                 Sort by Price
               </button>
+              <button
+                onClick={() => setSortBy('races')}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${
+                  sortBy === 'races'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Sort by Races
+              </button>
             </div>
           </div>
 
@@ -130,13 +157,17 @@ function Riders() {
                   <tr>
                     <th className="px-6 py-4 text-left font-bold">Name</th>
                     <th className="px-6 py-4 text-left font-bold">Team</th>
+                    <th className="px-6 py-4 text-center font-bold">Races</th>
                     <th className="px-6 py-4 text-right font-bold">Price</th>
+                    <th className="px-6 py-4 text-right font-bold">Price/Race</th>
                     <th className="px-6 py-4 text-center font-bold">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {filteredRiders.map(rider => {
                     const price = getPrice(rider);
+                    const raceCount = getRaceCount(rider);
+                    const pricePerRace = getPricePerRace(rider);
                     return (
                       <tr
                         key={rider.id}
@@ -148,10 +179,24 @@ function Riders() {
                         <td className="px-6 py-4 text-gray-600">
                           {rider.team || '—'}
                         </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="inline-block bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">
+                            {raceCount}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 text-right">
                           {price ? (
                             <span className="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold">
                               {formatPrice(price)}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-sm">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          {pricePerRace ? (
+                            <span className="text-sm text-gray-600">
+                              {formatPrice(pricePerRace)}
                             </span>
                           ) : (
                             <span className="text-gray-400 text-sm">—</span>
