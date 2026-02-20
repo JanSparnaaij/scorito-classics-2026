@@ -1,6 +1,9 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { execSync } from 'child_process';
+import fs from 'fs';
+import yaml from 'js-yaml';
+import prisma from 'db/client';
 
 // Load .env only in development (not in production where Railway provides env vars)
 if (process.env.NODE_ENV !== 'production' && !process.env.RAILWAY_ENVIRONMENT) {
@@ -113,10 +116,6 @@ const start = async () => {
     // Auto-seed prices from YAML config
     const seedPrices = async () => {
       try {
-        const fs = require('fs');
-        const yaml = require('js-yaml');
-        const prisma = require('db/client').default;
-        
         const pricesFile = path.join(__dirname, '../../../config/prices.classics-2026.yaml');
         
         if (!fs.existsSync(pricesFile)) {
@@ -134,7 +133,6 @@ const start = async () => {
           try {
             // Validate required fields
             if (!priceEntry.riderId || !priceEntry.source || priceEntry.amountEUR === undefined) {
-              console.log(`⚠️  Skipping invalid entry: ${JSON.stringify(priceEntry)}`);
               skipped++;
               continue;
             }
@@ -177,9 +175,9 @@ const start = async () => {
               created++;
             }
           } catch (err: any) {
-            // Log individual errors for 750K riders
-            if (priceEntry.amountEUR === 750000) {
-              console.error(`❌ Error seeding ${priceEntry.scoritoName}: ${err.message}`);
+            // Log individual errors for debugging
+            if (created + updated + skipped < 10) { // Only log first few errors
+              console.error(`Error processing ${priceEntry.scoritoName || 'unknown'}: ${err.message}`);
             }
             skipped++;
           }
