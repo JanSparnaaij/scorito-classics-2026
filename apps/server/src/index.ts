@@ -26,6 +26,7 @@ setInterval(() => {
   console.log(`[Heartbeat] Server is alive at ${new Date().toISOString()}`);
 }, 60000); // Every 60 seconds
 
+// Force reload prices cache [2026-02-20]
 const start = async () => {
   try {
     // Run database migrations in production
@@ -129,6 +130,9 @@ const start = async () => {
         let updated = 0;
         let skipped = 0;
 
+        const prices750k = prices.filter(p => p.amountEUR === 750000);
+        console.log(`📦 Processing ${prices.length} prices. Found ${prices750k.length} × 750K entries`);
+
         for (const priceEntry of prices) {
           try {
             // Validate required fields
@@ -143,6 +147,9 @@ const start = async () => {
             });
 
             if (!rider) {
+              if (priceEntry.amountEUR === 750000) {
+                console.log(`❌ 750K rider NOT FOUND: ${priceEntry.scoritoName} (ID: ${priceEntry.riderId})`);
+              }
               skipped++;
               continue;
             }
@@ -162,6 +169,9 @@ const start = async () => {
                   capturedAt: new Date(),
                 },
               });
+              if (priceEntry.amountEUR === 750000) {
+                console.log(`✅ 750K UPDATED: ${priceEntry.scoritoName}`);
+              }
               updated++;
             } else {
               await prisma.price.create({
@@ -172,12 +182,15 @@ const start = async () => {
                   capturedAt: new Date(),
                 },
               });
+              if (priceEntry.amountEUR === 750000) {
+                console.log(`✅ 750K CREATED: ${priceEntry.scoritoName}`);
+              }
               created++;
             }
           } catch (err: any) {
             // Log individual errors for debugging
-            if (created + updated + skipped < 10) { // Only log first few errors
-              console.error(`Error processing ${priceEntry.scoritoName || 'unknown'}: ${err.message}`);
+            if (priceEntry.amountEUR === 750000) {
+              console.log(`⚠️  750K entry skipped: ${priceEntry.scoritoName} - ${err.message}`);
             }
             skipped++;
           }
