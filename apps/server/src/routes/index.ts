@@ -108,7 +108,17 @@ export default async function (fastify: FastifyInstance) {
     }
     const startlist = await prisma.startlistEntry.findMany({
         where: { raceId: race.id },
-        include: { rider: true },
+        include: { 
+          rider: {
+            include: {
+              prices: {
+                where: { source: 'scorito-2026' },
+                orderBy: { capturedAt: 'desc' },
+                take: 1,
+              },
+            },
+          },
+        },
     });
     return startlist;
   });
