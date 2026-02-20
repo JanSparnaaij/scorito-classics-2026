@@ -24,7 +24,7 @@ function Riders() {
   const [riders, setRiders] = useState<Rider[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'price' | 'races'>('price');
+  const [sortBy, setSortBy] = useState<'name' | 'price' | 'races' | 'pricePerRace'>('price');
 
   useEffect(() => {
     fetch(`${API_URL}/api/riders`)
@@ -70,6 +70,11 @@ function Riders() {
       }
       if (sortBy === 'races') {
         return getRaceCount(b) - getRaceCount(a);
+      }
+      if (sortBy === 'pricePerRace') {
+        const perRaceA = getPricePerRace(a) || 0;
+        const perRaceB = getPricePerRace(b) || 0;
+        return perRaceB - perRaceA;
       }
       return a.name.localeCompare(b.name);
     });
@@ -122,6 +127,16 @@ function Riders() {
                 }`}
               >
                 Sort by Races
+              </button>
+              <button
+                onClick={() => setSortBy('pricePerRace')}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${
+                  sortBy === 'pricePerRace'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Sort by Price/Race
               </button>
             </div>
           </div>
