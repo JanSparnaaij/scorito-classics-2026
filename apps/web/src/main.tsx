@@ -15,6 +15,10 @@ const router = createBrowserRouter([
     element: <App />,
   },
   {
+    path: '/races',
+    element: <App />,
+  },
+  {
     path: '/race/:slug',
     element: <RaceStartlist />,
   },
