@@ -5,6 +5,22 @@ A web application for managing and tracking classic cycling races for the 2026 s
 🌐 **Live App:** [scorito.jandedataman.nl](https://scorito.jandedataman.nl)  
 🔗 **API:** [server-production-41c7.up.railway.app](https://server-production-41c7.up.railway.app)
 
+## Table of Contents
+
+-   [Features](#features)
+-   [Tech Stack](#tech-stack)
+-   [Project Structure](#project-structure)
+-   [Installation](#installation)
+-   [Usage](#usage)
+-   [API Endpoints](#api-endpoints)
+-   [Data Management](#data-management)
+-   [Deployment](#deployment)
+-   [Configuration](#configuration)
+-   [Technology Decisions](#technology-decisions)
+-   [Ethical Considerations](#ethical-considerations)
+-   [Contributing](#contributing)
+-   [License](#license)
+
 ## Features
 
 -   📅 17 Classic races (Omloop Het Nieuwsblad → Liège-Bastogne-Liège)
@@ -41,30 +57,7 @@ scorito-classics-2026/
 └── turbo.json         # Turbo build configuration
 ```
 
-## Deployment
-
-### Production URLs
-
--   **Frontend:** [scorito.jandedataman.nl](https://scorito.jandedataman.nl)
--   **Backend API:** [server-production-41c7.up.railway.app](https://server-production-41c7.up.railway.app)
--   **Database:** PostgreSQL on Railway
-
-### Environment Variables
-
-**Vercel (Frontend):**
-```env
-VITE_API_URL=https://server-production-41c7.up.railway.app
-```
-
-**Railway (Backend):**
-```env
-PORT=3000
-DATABASE_URL=postgresql://...  (provided by Railway)
-USER_AGENT=scorito-classics-2026
-THROTTLE_DELAY_MS=1000
-```
-
-## Local Development
+## Installation
 
 ### Prerequisites
 
@@ -72,7 +65,7 @@ THROTTLE_DELAY_MS=1000
 -   pnpm 8+
 -   Docker (optional, for local PostgreSQL)
 
-### Installation & Setup
+### Setup
 
 1.  **Clone the repository:**
     ```bash
@@ -91,7 +84,11 @@ THROTTLE_DELAY_MS=1000
     ```
 
 4.  **Set environment variables:**
-    Create `.env` in packages/db/:
+    Copy the example file and edit as needed:
+    ```bash
+    cp .env.example packages/db/.env
+    ```
+    Then set `DATABASE_URL` in `packages/db/.env`:
     ```env
     DATABASE_URL="postgresql://postgres:password@localhost:5432/scorito"
     ```
@@ -101,6 +98,8 @@ THROTTLE_DELAY_MS=1000
     pnpm --filter db exec prisma migrate deploy
     pnpm --filter db exec prisma generate
     ```
+
+## Usage
 
 ### Running Locally
 
@@ -120,6 +119,29 @@ pnpm --filter server dev
 
 # Frontend only
 pnpm --filter web dev
+```
+
+### Typical Workflow
+
+1.  **Seed the races** (loads 17 classics from YAML config):
+    ```bash
+    curl -X POST http://localhost:3000/api/races/seed
+    ```
+
+2.  **Sync startlists** (scrapes current startlists from ProCyclingStats):
+    ```bash
+    curl -X POST http://localhost:3000/api/races/sync
+    ```
+
+3.  **Browse the app** at `http://localhost:5173`:
+    -   View all upcoming classic races
+    -   Browse race startlists
+    -   Explore rider profiles and team rosters
+
+### Building for Production
+
+```bash
+pnpm build
 ```
 
 ## API Endpoints
@@ -151,7 +173,17 @@ curl -X POST https://server-production-41c7.up.railway.app/api/races/sync
 
 **Note:** Startlists are typically published 1-2 weeks before each race.
 
-## Race Configuration
+## Deployment
+
+### Production URLs
+
+-   **Frontend:** [scorito.jandedataman.nl](https://scorito.jandedataman.nl)
+-   **Backend API:** [server-production-41c7.up.railway.app](https://server-production-41c7.up.railway.app)
+-   **Database:** PostgreSQL on Railway
+
+## Configuration
+
+### Race Configuration
 
 Edit [`config/races.classics-2026.yaml`](config/races.classics-2026.yaml) to manage races:
 
@@ -160,6 +192,36 @@ Edit [`config/races.classics-2026.yaml`](config/races.classics-2026.yaml) to man
   slug: ronde-van-vlaanderen
   date: 2026-04-05
   url: https://www.procyclingstats.com/race/ronde-van-vlaanderen/2026/startlist
+```
+
+### Environment Variables
+
+Copy `.env.example` to configure your local environment:
+
+```bash
+cp .env.example packages/db/.env
+```
+
+| Variable | Description | Default |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection string | `file:./dev.db` |
+| `USER_AGENT` | HTTP User-Agent for scraping requests | `scorito-classics-2026` |
+| `THROTTLE_DELAY_MS` | Delay (ms) between scraping requests | `1000` |
+| `MAX_CONCURRENCY` | Max concurrent scraping requests | `1` |
+| `SCORITO_EMAIL` | Scorito account email _(optional)_ | — |
+| `SCORITO_PASSWORD` | Scorito account password _(optional)_ | — |
+
+**Vercel (Frontend):**
+```env
+VITE_API_URL=https://server-production-41c7.up.railway.app
+```
+
+**Railway (Backend):**
+```env
+PORT=3000
+DATABASE_URL=postgresql://...  (provided by Railway)
+USER_AGENT=scorito-classics-2026
+THROTTLE_DELAY_MS=1000
 ```
 
 ## Technology Decisions
@@ -192,6 +254,10 @@ This application scrapes data from ProCyclingStats. Please:
 
 ## Contributing
 
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+**Quick start:**
+
 1.  Fork the repository
 2.  Create a feature branch: `git checkout -b feature/amazing-feature`
 3.  Commit changes: `git commit -m 'Add amazing feature'`
@@ -200,7 +266,7 @@ This application scrapes data from ProCyclingStats. Please:
 
 ## License
 
-MIT
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ## Author
 
