@@ -23,10 +23,12 @@ A web application for managing and tracking classic cycling races for the 2026 s
 
 ## Features
 
--   📅 17 Classic races (Omloop Het Nieuwsblad → Liège-Bastogne-Liège)
+-   📅 17 Classic races (Omloop Het Nieuwsblad → Luik-Bastenaken-Luik)
 -   🚴 314+ riders with team information
+-   💶 Scorito rider prices/budget data for team selection
 -   📊 Real-time startlist scraping from ProCyclingStats
 -   🔄 Automatic data synchronization
+-   🏆 Teams overview with rider rosters
 -   📱 Responsive UI with Tailwind CSS
 
 ## Tech Stack
@@ -51,7 +53,8 @@ scorito-classics-2026/
 │   ├── db/            # Prisma schema, client, migrations
 │   └── scraping/      # ProCyclingStats scraper
 ├── config/
-│   └── races.classics-2026.yaml  # Race configuration
+│   ├── races.classics-2026.yaml   # Race configuration
+│   └── prices.classics-2026.yaml  # Scorito rider prices/budget
 ├── Dockerfile         # Container for Railway deployment
 ├── docker-compose.yml # Local PostgreSQL setup
 └── turbo.json         # Turbo build configuration
@@ -121,6 +124,23 @@ pnpm --filter server dev
 pnpm --filter web dev
 ```
 
+### Convenience Scripts
+
+The root `package.json` includes the following scripts:
+
+| Script | Description |
+|---|---|
+| `pnpm dev` | Start frontend + backend in parallel |
+| `pnpm build` | Build all packages |
+| `pnpm test` | Run tests with Vitest |
+| `pnpm lint` | Lint all packages |
+| `pnpm db:generate` | Regenerate Prisma client |
+| `pnpm db:migrate` | Run database migrations (dev) |
+| `pnpm db:seed` | Seed the database from `packages/db/seed.ts` |
+| `pnpm sync:race` | Sync a single race's startlist |
+| `pnpm sync:all` | Sync all races' startlists |
+| `pnpm import:prices` | Import prices from the YAML config |
+
 ### Typical Workflow
 
 1.  **Seed the races** (loads 17 classics from YAML config):
@@ -136,7 +156,8 @@ pnpm --filter web dev
 3.  **Browse the app** at `http://localhost:5173`:
     -   View all upcoming classic races
     -   Browse race startlists
-    -   Explore rider profiles and team rosters
+    -   Explore rider profiles with Scorito price and race count
+    -   Browse teams and their rosters
 
 ### Building for Production
 
@@ -146,14 +167,31 @@ pnpm build
 
 ## API Endpoints
 
--   `GET /` - Health check
+### Health & Diagnostics
+
+-   `GET /` - Health check with endpoint overview
+-   `GET /health` - Simple health status
+-   `GET /ping` - Ping/pong check
+-   `GET /debug` - Debug info (port, environment, database status)
+
+### Races
+
 -   `GET /api/races` - List all races
--   `GET /api/races/:slug/startlist` - Get startlist for a race
--   `GET /api/riders` - List riders (100 most recent)
--   `GET /api/riders/count` - Total rider count
+-   `GET /api/races/:slug/startlist` - Get startlist for a race (includes rider prices)
 -   `POST /api/races/seed` - Seed races from YAML config
 -   `POST /api/races/sync` - Sync all startlists from ProCyclingStats
 -   `DELETE /api/races/:slug` - Delete a race
+
+### Riders
+
+-   `GET /api/riders` - List all riders (with prices and race counts)
+-   `GET /api/riders/count` - Total rider count
+-   `GET /api/riders/:riderId/prices` - Get price history for a rider
+
+### Prices
+
+-   `GET /api/prices` - List all prices (ordered by amount, includes rider info)
+-   `POST /api/prices/seed` - Seed prices from `config/prices.classics-2026.yaml`
 
 ## Data Management
 
@@ -172,6 +210,15 @@ curl -X POST https://server-production-41c7.up.railway.app/api/races/sync
 ```
 
 **Note:** Startlists are typically published 1-2 weeks before each race.
+
+### Seed Prices
+
+Load Scorito rider prices from the YAML configuration:
+```bash
+curl -X POST https://server-production-41c7.up.railway.app/api/prices/seed
+```
+
+> **Note:** Prices are also automatically seeded on every server startup from `config/prices.classics-2026.yaml`.
 
 ## Deployment
 
@@ -193,6 +240,20 @@ Edit [`config/races.classics-2026.yaml`](config/races.classics-2026.yaml) to man
   date: 2026-04-05
   url: https://www.procyclingstats.com/race/ronde-van-vlaanderen/2026/startlist
 ```
+
+### Prices Configuration
+
+Edit [`config/prices.classics-2026.yaml`](config/prices.classics-2026.yaml) to manage Scorito rider prices:
+
+```yaml
+- riderId: <prisma-rider-id>
+  riderName: pogačar tadej
+  scoritoName: T. Pogačar
+  amountEUR: 7000000
+  source: scorito-2026
+```
+
+> **Note:** `riderId` must match an existing rider ID in the database. Prices are auto-seeded on every server startup — only existing riders are updated (no new riders are created).
 
 ### Environment Variables
 
